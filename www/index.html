@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoHeaders - Zoraxy Plugin</title>
+    <style>
+        :root {
+            --bg-color: #121418;
+            --card-bg: #1b1f24;
+            --card-border: #2d333b;
+            --text-main: #e6edf3;
+            --text-muted: #8b949e;
+            --accent: #238636;
+            --accent-hover: #2ea043;
+            --primary: #388bfd;
+            --danger: #da3633;
+            --tag-bg: #21262d;
+            --tag-border: #30363d;
+            --table-row-hover: #22272e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 24px;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-green {
+            background-color: rgba(35, 134, 54, 0.2);
+            color: #3fb950;
+            border: 1px solid #238636;
+        }
+
+        .badge-gray {
+            background-color: rgba(139, 148, 158, 0.2);
+            color: #8b949e;
+            border: 1px solid #30363d;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #58a6ff;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        input[type="text"], input[type="number"], textarea, select {
+            width: 100%;
+            background-color: var(--bg-color);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        input[type="text"]:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .switch-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .btn {
+            background-color: var(--accent);
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background-color: var(--tag-bg);
+            border: 1px solid var(--tag-border);
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover {
+            background-color: #30363d;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background-color: #b62324;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        th {
+            color: var(--text-muted);
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        tr:hover td {
+            background-color: var(--table-row-hover);
+        }
+
+        .code-pill {
+            background-color: var(--tag-bg);
+            border: 1px solid var(--tag-border);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .status-2xx { background: rgba(35, 134, 54, 0.2); color: #3fb950; }
+        .status-4xx { background: rgba(210, 153, 34, 0.2); color: #d29922; }
+        .status-5xx { background: rgba(218, 54, 51, 0.2); color: #f85149; }
+
+        .country-flag {
+            font-weight: 700;
+            color: #58a6ff;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #1f6feb;
+            color: #ffffff;
+            padding: 12px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-title">
+                <h2>🌐 Zoraxy GeoHeaders</h2>
+                <span id="plugin-status-badge" class="badge badge-green">ACTIVE</span>
+            </div>
+            <div>
+                <button class="btn btn-secondary" onclick="fetchData()">🔄 Refresh</button>
+            </div>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Requests Enriched</div>
+                <div id="stat-total-reqs" class="stat-value">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Injected Header</div>
+                <div id="stat-header-name" class="stat-value code-pill" style="font-size:16px;">X-Country</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Tag Matching Rule</div>
+                <div id="stat-tag-rule" class="stat-value code-pill" style="font-size:16px;">geo-match</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">IP Database Ranges</div>
+                <div id="stat-total-ranges" class="stat-value">0</div>
+            </div>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="switchTab('overview')">Live Traffic</button>
+            <button class="tab-btn" onclick="switchTab('settings')">Configuration</button>
+            <button class="tab-btn" onclick="switchTab('tester')">IP Lookup & Tester</button>
+        </div>
+
+        <!-- Overview / Traffic Tab -->
+        <div id="tab-overview" class="tab-content active">
+            <div class="card">
+                <div class="card-header">
+                    <span>Recent Enriched Requests</span>
+                    <button class="btn btn-secondary btn-danger" onclick="resetStats()">Clear Traffic Logs</button>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Client IP</th>
+                                <th>Country</th>
+                                <th>Method</th>
+                                <th>Host / URI</th>
+                                <th>Status</th>
+                                <th>Duration</th>
+                            </tr>
+                        </thead>
+                        <tbody id="traffic-table-body">
+                            <tr>
+                                <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">No requests recorded yet. Incoming requests matching tag 'geo-match' will appear here.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="tab-settings" class="tab-content">
+            <div class="card">
+                <div class="card-header">Plugin Settings</div>
+                <form id="settings-form" onsubmit="saveSettings(event)">
+                    <div class="form-group">
+                        <label class="switch-label">
+                            <input type="checkbox" id="cfg-enabled" checked>
+                            <span>Enable GeoHeaders Injection</span>
+                        </label>
+                        <div class="form-hint">When disabled, sniff will pass through requests without capturing.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cfg-header-name">Header Name</label>
+                        <input type="text" id="cfg-header-name" value="X-Country" required>
+                        <div class="form-hint">The HTTP header injected into upstream requests (default: X-Country).</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cfg-fallback-country">Fallback Country Code</label>
+                        <input type="text" id="cfg-fallback-country" value="XX" maxlength="4" required>
+                        <div class="form-hint">Used when the IP is unknown or cannot be resolved.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cfg-local-country">Local / LAN Country Code</label>
+                        <input type="text" id="cfg-local-country" value="LOCAL" maxlength="8" required>
+                        <div class="form-hint">Used for private networks, loopback (127.0.0.1, ::1), and link-local addresses.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="switch-label">
+                            <input type="checkbox" id="cfg-inject-continent">
+                            <span>Inject Continent Header (e.g. X-Continent: NA, EU, AS, OC, SA, AF)</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cfg-tag-filter">Tag Match Filter</label>
+                        <input type="text" id="cfg-tag-filter" value="geo-match" required>
+                        <div class="form-hint">Endpoints in Zoraxy tagged with this tag will be intercepted by GeoHeaders.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cfg-default-upstream">Default Upstream Forwarding Target (Optional)</label>
+                        <input type="text" id="cfg-default-upstream" placeholder="http://127.0.0.1:8080">
+                        <div class="form-hint">Fallback upstream backend URL if not dynamically mapped by Zoraxy host router.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cfg-custom-overrides">Custom CIDR Overrides (JSON)</label>
+                        <textarea id="cfg-custom-overrides" rows="4" placeholder='{"10.0.0.0/8": "OFFICE", "1.2.3.4/32": "VIP"}'></textarea>
+                        <div class="form-hint">Custom CIDRs to specific country or location codes.</div>
+                    </div>
+
+                    <button type="submit" class="btn">💾 Save Configuration</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- IP Lookup & Tester Tab -->
+        <div id="tab-tester" class="tab-content">
+            <div class="card">
+                <div class="card-header">Simulate GeoIP Resolution</div>
+                <div class="form-group">
+                    <label for="lookup-ip">IP Address (IPv4 or IPv6)</label>
+                    <input type="text" id="lookup-ip" placeholder="e.g. 8.8.8.8, 1.1.1.1, 2606:4700::6810:85e5">
+                </div>
+                <button class="btn" onclick="lookupIP()">🔍 Test Lookup</button>
+
+                <div id="lookup-result" style="margin-top: 16px; display: none;">
+                    <div class="stat-card" style="background-color: var(--bg-color);">
+                        <div class="stat-label">Lookup Result</div>
+                        <p style="margin-top: 8px;">Country Code: <strong id="lookup-country" class="country-flag">US</strong></p>
+                        <p style="margin-top: 4px;">Injected Header: <span id="lookup-injected" class="code-pill">X-Country: US</span></p>
+                        <p style="margin-top: 4px;">Is Private / Special: <span id="lookup-private">false</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">Configuration saved!</div>
+
+    <script>
+        const API_PREFIX = window.location.pathname.replace(/\/+$/, '');
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(tabId));
+            if (activeBtn) activeBtn.classList.add('active');
+            
+            const activeContent = document.getElementById('tab-' + tabId);
+            if (activeContent) activeContent.classList.add('active');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 2500);
+        }
+
+        async function fetchData() {
+            try {
+                // Fetch status
+                const statusRes = await fetch(API_PREFIX + '/api/status');
+                if (statusRes.ok) {
+                    const status = await statusRes.json();
+                    document.getElementById('stat-total-reqs').textContent = status.total_requests || 0;
+                    document.getElementById('stat-header-name').textContent = status.header_name || 'X-Country';
+                    document.getElementById('stat-tag-rule').textContent = status.tag_filter || 'geo-match';
+                    document.getElementById('stat-total-ranges').textContent = status.total_ranges || 0;
+                    
+                    const badge = document.getElementById('plugin-status-badge');
+                    if (status.enabled) {
+                        badge.className = 'badge badge-green';
+                        badge.textContent = 'ACTIVE';
+                    } else {
+                        badge.className = 'badge badge-gray';
+                        badge.textContent = 'DISABLED';
+                    }
+                }
+
+                // Fetch stats/traffic
+                const statsRes = await fetch(API_PREFIX + '/api/stats');
+                if (statsRes.ok) {
+                    const stats = await statsRes.json();
+                    renderTrafficTable(stats.recent_requests || []);
+                }
+
+                // Fetch config
+                const cfgRes = await fetch(API_PREFIX + '/api/config');
+                if (cfgRes.ok) {
+                    const cfg = await cfgRes.json();
+                    document.getElementById('cfg-enabled').checked = cfg.enabled !== false;
+                    document.getElementById('cfg-header-name').value = cfg.header_name || 'X-Country';
+                    document.getElementById('cfg-fallback-country').value = cfg.fallback_country || 'XX';
+                    document.getElementById('cfg-local-country').value = cfg.local_country || 'LOCAL';
+                    document.getElementById('cfg-inject-continent').checked = !!cfg.inject_continent;
+                    document.getElementById('cfg-tag-filter').value = cfg.tag_filter || 'geo-match';
+                    document.getElementById('cfg-default-upstream').value = cfg.default_upstream || '';
+                    document.getElementById('cfg-custom-overrides').value = JSON.stringify(cfg.custom_overrides || {}, null, 2);
+                }
+            } catch (err) {
+                console.error('Failed to fetch plugin data:', err);
+            }
+        }
+
+        function renderTrafficTable(requests) {
+            const tbody = document.getElementById('traffic-table-body');
+            if (!requests || requests.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">No requests recorded yet. Incoming requests matching tag 'geo-match' will appear here.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = requests.map(req => {
+                let statusClass = 'status-2xx';
+                if (req.status_code >= 400 && req.status_code < 500) statusClass = 'status-4xx';
+                else if (req.status_code >= 500) statusClass = 'status-5xx';
+
+                const timeStr = new Date(req.timestamp).toLocaleTimeString();
+
+                return `<tr>
+                    <td>${timeStr}</td>
+                    <td><span class="code-pill">${escapeHtml(req.client_ip || 'unknown')}</span></td>
+                    <td><strong class="country-flag">${escapeHtml(req.country || 'XX')}</strong></td>
+                    <td><span class="code-pill">${escapeHtml(req.method || 'GET')}</span></td>
+                    <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml((req.host || '') + (req.uri || ''))}</td>
+                    <td><span class="status-pill ${statusClass}">${req.status_code}</span></td>
+                    <td>${req.duration_ms}ms</td>
+                </tr>`;
+            }).join('');
+        }
+
+        async function saveSettings(e) {
+            e.preventDefault();
+            let customOverrides = {};
+            try {
+                const overridesText = document.getElementById('cfg-custom-overrides').value.trim();
+                if (overridesText) {
+                    customOverrides = JSON.parse(overridesText);
+                }
+            } catch (err) {
+                alert('Invalid JSON in Custom Overrides: ' + err.message);
+                return;
+            }
+
+            const payload = {
+                enabled: document.getElementById('cfg-enabled').checked,
+                header_name: document.getElementById('cfg-header-name').value.trim(),
+                fallback_country: document.getElementById('cfg-fallback-country').value.trim(),
+                local_country: document.getElementById('cfg-local-country').value.trim(),
+                inject_continent: document.getElementById('cfg-inject-continent').checked,
+                tag_filter: document.getElementById('cfg-tag-filter').value.trim(),
+                default_upstream: document.getElementById('cfg-default-upstream').value.trim(),
+                custom_overrides: customOverrides
+            };
+
+            try {
+                const res = await fetch(API_PREFIX + '/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    showToast('Configuration saved successfully!');
+                    fetchData();
+                } else {
+                    const err = await res.json();
+                    alert('Error saving config: ' + (err.message || 'Unknown error'));
+                }
+            } catch (err) {
+                alert('Network error saving config: ' + err.message);
+            }
+        }
+
+        async function resetStats() {
+            if (!confirm('Are you sure you want to clear the traffic logs?')) return;
+            try {
+                const res = await fetch(API_PREFIX + '/api/stats/reset', { method: 'POST' });
+                if (res.ok) {
+                    showToast('Traffic logs cleared.');
+                    fetchData();
+                }
+            } catch (err) {
+                alert('Error resetting stats: ' + err.message);
+            }
+        }
+
+        async function lookupIP() {
+            const ip = document.getElementById('lookup-ip').value.trim();
+            if (!ip) return;
+            try {
+                const res = await fetch(API_PREFIX + '/api/lookup?ip=' + encodeURIComponent(ip));
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('lookup-country').textContent = data.country;
+                    document.getElementById('lookup-injected').textContent = `X-Country: ${data.country}`;
+                    document.getElementById('lookup-private').textContent = data.is_private ? 'true (Local/Private)' : 'false (Public Internet)';
+                    document.getElementById('lookup-result').style.display = 'block';
+                }
+            } catch (err) {
+                alert('Lookup failed: ' + err.message);
+            }
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // Initialize and auto-refresh
+        fetchData();
+        setInterval(fetchData, 5000);
+    </script>
+</body>
+</html>
