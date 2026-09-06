@@ -1,0 +1,10 @@
+{
+  "Name": "GeoHeaders",
+  "Author": "mariofix",
+  "Version": "1.0.0",
+  "Type": 0,
+  "TargetTag": "geo-match",
+  "Description": "Inject X-Country in every request for tagged (geo-match) endpoints",
+  "DynamicRouter": true,
+  "AllowConfiguration": true
+}

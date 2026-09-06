@@ -1,0 +1,5 @@
+zoraxy-geoheaders
+*.exe
+*.test
+*.out
+config.json
