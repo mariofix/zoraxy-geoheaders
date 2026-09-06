@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
@@ -50,7 +51,7 @@ func NewProxyEngine(cfgManager *config.ConfigManager, geoDB *geoip.GeoDB, tracke
 		TLSHandshakeTimeout:   10 * time.Second,
 		ExpectContinueTimeout: 1 * time.Second,
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true, // Allow self-signed backends
+			MinVersion: tls.VersionTLS12,
 		},
 	}
 
@@ -157,9 +158,16 @@ func (p *ProxyEngine) HandleCapture(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.Header().Set(headerName, countryCode)
 		w.WriteHeader(http.StatusOK)
-		respBody := fmt.Sprintf(`{"status":"ok","plugin":"zoraxy-geoheaders","client_ip":"%s","injected_header":"%s","country":"%s","host":"%s","uri":"%s"}`,
-			clientIP, headerName, countryCode, r.Host, r.RequestURI)
-		_, _ = w.Write([]byte(respBody))
+		respData := map[string]interface{}{
+			"status":          "ok",
+			"plugin":          "zoraxy-geoheaders",
+			"client_ip":       clientIP,
+			"injected_header": headerName,
+			"country":         countryCode,
+			"host":            r.Host,
+			"uri":             r.RequestURI,
+		}
+		_ = json.NewEncoder(w).Encode(respData)
 
 		duration := time.Since(start).Milliseconds()
 		p.tracker.RecordRequest(stats.RequestLogEntry{

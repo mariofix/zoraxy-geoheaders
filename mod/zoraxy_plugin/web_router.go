@@ -82,12 +82,26 @@ func (p *PluginUiRouter) Handler() http.Handler {
 			trimmed = "index.html"
 		}
 
+		// Sanitize path to prevent directory traversal
+		cleanSubPath := filepath.Clean(filepath.ToSlash(trimmed))
+		if strings.HasPrefix(cleanSubPath, "../") || cleanSubPath == ".." || strings.Contains(cleanSubPath, "/../") {
+			http.NotFound(w, r)
+			return
+		}
+
 		// Try dev directory if enabled
 		if p.enableDevMode && p.devWebRoot != "" {
-			diskPath := filepath.Join(p.devWebRoot, trimmed)
-			if info, err := os.Stat(diskPath); err == nil && !info.IsDir() {
-				p.serveFileFromDisk(w, r, diskPath)
-				return
+			absDevRoot, err := filepath.Abs(p.devWebRoot)
+			if err == nil {
+				targetDiskPath := filepath.Join(absDevRoot, filepath.FromSlash(cleanSubPath))
+				targetDiskPath = filepath.Clean(targetDiskPath)
+				rel, err := filepath.Rel(absDevRoot, targetDiskPath)
+				if err == nil && !strings.HasPrefix(rel, "..") {
+					if info, err := os.Stat(targetDiskPath); err == nil && !info.IsDir() {
+						p.serveFileFromDisk(w, r, targetDiskPath)
+						return
+					}
+				}
 			}
 		}
 
@@ -95,12 +109,12 @@ func (p *PluginUiRouter) Handler() http.Handler {
 		if p.embedFS != nil {
 			subFS, err := fs.Sub(p.embedFS, p.fsSubpath)
 			if err == nil {
-				f, err := subFS.Open(trimmed)
+				f, err := subFS.Open(cleanSubPath)
 				if err == nil {
 					defer f.Close()
 					content, err := io.ReadAll(f)
 					if err == nil {
-						p.serveBytes(w, r, trimmed, content)
+						p.serveBytes(w, r, cleanSubPath, content)
 						return
 					}
 				}
@@ -112,12 +126,28 @@ func (p *PluginUiRouter) Handler() http.Handler {
 }
 
 func (p *PluginUiRouter) serveFileFromDisk(w http.ResponseWriter, r *http.Request, diskPath string) {
-	content, err := os.ReadFile(diskPath)
+	if p.devWebRoot == "" {
+		http.NotFound(w, r)
+		return
+	}
+	absDevRoot, err := filepath.Abs(p.devWebRoot)
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
-	p.serveBytes(w, r, filepath.Base(diskPath), content)
+	cleanDiskPath := filepath.Clean(diskPath)
+	rel, err := filepath.Rel(absDevRoot, cleanDiskPath)
+	if err != nil || strings.HasPrefix(rel, "..") {
+		http.NotFound(w, r)
+		return
+	}
+
+	content, err := os.ReadFile(cleanDiskPath)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	p.serveBytes(w, r, filepath.Base(cleanDiskPath), content)
 }
 
 func (p *PluginUiRouter) serveBytes(w http.ResponseWriter, r *http.Request, filename string, content []byte) {
