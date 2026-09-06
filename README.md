@@ -45,16 +45,74 @@ make build
 ```
 This produces the standalone binary `zoraxy-geoheaders`.
 
-### 2. Add to Zoraxy
+### 2. Manual Installation
 Copy the `zoraxy-geoheaders` binary and `.introspect` file into Zoraxy's `system/plugins/` directory:
 ```bash
 mkdir -p system/plugins/geoheaders/
 cp zoraxy-geoheaders .introspect system/plugins/geoheaders/
 ```
 
-### 3. Tag Zoraxy Endpoints
+### 3. Running with Docker
+
+If you run Zoraxy inside a Docker container, follow these steps to install and configure `zoraxy-geoheaders`:
+
+#### Option A: Docker Compose (Recommended)
+
+1. Obtain the plugin binary for your architecture (e.g. `zoraxy-geoheaders_linux_amd64` or `zoraxy-geoheaders_linux_arm64`) and the `.introspect` file from the [Releases](https://github.com/mariofix/zoraxy-geoheaders/releases) page (or build from source).
+2. Place `zoraxy-geoheaders` and `.introspect` in a local plugin folder on your host machine, e.g. `./plugins/geoheaders/`.
+3. Ensure the binary has execution permissions:
+   ```bash
+   chmod +x ./plugins/geoheaders/zoraxy-geoheaders
+   ```
+4. Mount the plugin directory into Zoraxy's container in `docker-compose.yml`:
+   ```yaml
+   version: '3.8'
+   services:
+     zoraxy:
+       image: tobychui/zoraxy:latest
+       container_name: zoraxy
+       ports:
+         - "8000:8000"
+         - "80:80"
+         - "443:443"
+       volumes:
+         - ./zoraxy-data:/opt/zoraxy/config
+         # Mount plugin directory into Zoraxy:
+         - ./plugins/geoheaders:/opt/zoraxy/system/plugins/geoheaders
+       restart: unless-stopped
+   ```
+5. Start or restart the container:
+   ```bash
+   docker compose up -d
+   ```
+
+#### Option B: Copy into a Running Docker Container
+
+If Zoraxy is already running in a container named `zoraxy`:
+
+1. Create the plugin directory inside the container:
+   ```bash
+   docker exec zoraxy mkdir -p /opt/zoraxy/system/plugins/geoheaders
+   ```
+2. Copy the binary and `.introspect` file into the container:
+   ```bash
+   docker cp zoraxy-geoheaders zoraxy:/opt/zoraxy/system/plugins/geoheaders/zoraxy-geoheaders
+   docker cp .introspect zoraxy:/opt/zoraxy/system/plugins/geoheaders/.introspect
+   ```
+3. Grant executable permissions and restart Zoraxy:
+   ```bash
+   docker exec zoraxy chmod +x /opt/zoraxy/system/plugins/geoheaders/zoraxy-geoheaders
+   docker restart zoraxy
+   ```
+
+### 4. Tag & Configure Zoraxy Endpoints
 In the Zoraxy Web UI (Proxy Rules / Subrouting):
-- Add the tag `geo-match` to any domain, subdomain, or path rule you want enriched with `X-Country`.
+1. **Verify Plugin Detection**:
+   - Navigate to **Plugins** (or **Router Plugins**). Verify `GeoHeaders` appears in the plugin list.
+2. **Tag Proxy Rules**:
+   - Add the tag `geo-match` to any domain, subdomain, or path rule you want enriched with `X-Country` (and optional `X-Continent`).
+3. **Open GeoHeaders Dashboard**:
+   - Click the plugin's Web UI button in Zoraxy to access live traffic stats, custom CIDR overrides, and GeoIP testing tools.
 
 ---
 
