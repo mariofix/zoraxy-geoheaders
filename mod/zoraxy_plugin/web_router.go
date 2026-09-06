@@ -72,25 +72,39 @@ func (p *PluginUiRouter) HandleFunc(pattern string, handler http.HandlerFunc, mu
 	mux.HandleFunc(fullPath, handler)
 }
 
+var allowedUIFiles = map[string]string{
+	"":            "index.html",
+	"index.html":  "index.html",
+	"index.htm":   "index.html",
+	"favicon.ico": "favicon.ico",
+}
+
 func (p *PluginUiRouter) Handler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		reqPath := r.URL.Path
 		trimmed := strings.TrimPrefix(reqPath, p.rootURLPath)
 		trimmed = strings.TrimPrefix(trimmed, "/")
 
-		// Extract only base filename to prevent path traversal
-		baseName := filepath.Base(trimmed)
-		if baseName == "" || baseName == "." || baseName == "/" {
-			baseName = "index.html"
+		// Extract base filename and match against allowed file table
+		baseName := strings.ToLower(filepath.Base(trimmed))
+		safeFileName, ok := allowedUIFiles[baseName]
+		if !ok {
+			// Check if root path
+			if trimmed == "" || trimmed == "/" {
+				safeFileName = "index.html"
+			} else {
+				http.NotFound(w, r)
+				return
+			}
 		}
 
 		// Try dev directory if enabled
 		if p.enableDevMode && p.devWebRoot != "" {
-			diskPath := filepath.Join(p.devWebRoot, baseName)
+			diskPath := filepath.Join(p.devWebRoot, safeFileName)
 			if info, err := os.Stat(diskPath); err == nil && !info.IsDir() {
 				content, err := os.ReadFile(diskPath)
 				if err == nil {
-					p.serveBytes(w, r, baseName, content)
+					p.serveBytes(w, r, safeFileName, content)
 					return
 				}
 			}
@@ -100,9 +114,9 @@ func (p *PluginUiRouter) Handler() http.Handler {
 		if p.embedFS != nil {
 			subFS, err := fs.Sub(p.embedFS, p.fsSubpath)
 			if err == nil {
-				content, err := fs.ReadFile(subFS, baseName)
+				content, err := fs.ReadFile(subFS, safeFileName)
 				if err == nil {
-					p.serveBytes(w, r, baseName, content)
+					p.serveBytes(w, r, safeFileName, content)
 					return
 				}
 			}
