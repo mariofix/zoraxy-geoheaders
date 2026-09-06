@@ -89,7 +89,7 @@ jobs:
 
           # Generate SHA-256 Checksums
           cd dist
-          sha256sum * > checksums.txt
+          sha256sum zoraxy-geoheaders_* > checksums.txt
           cd ..
 
       - name: Upload Release Assets
