@@ -9,6 +9,6 @@ test:
 	go test -v ./...
 
 clean:
-	rm -f $(BINARY_NAME)
+	rm -rf $(BINARY_NAME) dist/
 
 .PHONY: all build test clean
